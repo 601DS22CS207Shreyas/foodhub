@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'shreyasc19/foodhub-app:latest'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/601DS22CS207Shreyas/foodhub.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build(DOCKER_IMAGE)
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withDockerRegistry(credentialsId: 'sagar', url: '') {
+                    docker.image(DOCKER_IMAGE).push()
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f deployment.yaml'
+                sh 'kubectl apply -f service.yaml'
+            }
+        }
+    }
+}
